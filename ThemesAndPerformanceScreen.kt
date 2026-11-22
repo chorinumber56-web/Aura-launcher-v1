@@ -408,9 +408,169 @@ fun ThemesAndPerformanceScreen(
                                 Text("Reset")
                             }
                         }
+                        
                     }
                 }
 
                 val previewPrimary = parseHexColorOrNull(primaryHex) ?: NeonRed
                 val previewSecondary = parseHexColorOrNull(secondaryHex) ?: NeonPurple
                 val previewBg = parseHe
+                HexColorOrNull(backgroundHex) ?: ObsidianVoid
+                val previewCard = parseHexColorOrNull(cardHex) ?: ObsidianCard
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(accents.glassPanelHeavy)
+                        .border(1.dp, accents.subtleBorder, RoundedCornerShape(18.dp))
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Rounded.Palette, contentDescription = null, tint = accents.neonRed)
+                        Text(
+                            text = "CREATE CUSTOM THEME",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = colorScheme.onSurface
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = customName,
+                        onValueChange = { customName = it },
+                        label = { Text("Theme Name") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = accents.neonPurple,
+                            unfocusedBorderColor = accents.subtleBorder
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("custom_theme_name_input")
+                    )
+
+                    val slotLabels = listOf(
+                        "Primary" to primaryHex,
+                        "Secondary" to secondaryHex,
+                        "Background" to backgroundHex,
+                        "Card" to cardHex
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        slotLabels.forEachIndexed { index, (label, hex) ->
+                            val selectedSlot = activeColorSlot == index
+                            val slotColor = parseHexColorOrNull(hex) ?: ObsidianCard
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .defaultMinSize(minHeight = 48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (selectedSlot) ObsidianElevated else ObsidianSurface)
+                                    .border(
+                                        width = if (selectedSlot) 1.5.dp else 1.dp,
+                                        color = if (selectedSlot) accents.neonRed else accents.subtleBorder,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable { activeColorSlot = index }
+                                    .padding(vertical = 6.dp, horizontal = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clip(CircleShape)
+                                        .background(slotColor)
+                                        .border(1.dp, colorScheme.onSurface.copy(alpha = 0.5f), CircleShape)
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colorScheme.onSurface,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Tap a color swatch or enter hex:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AuraColorSwatches.forEach { swatch ->
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(swatch)
+                                    .border(1.5.dp, colorScheme.onSurface.copy(alpha = 0.45f), CircleShape)
+                                    .clickable {
+                                        val hex = swatch.toHexString()
+                                        when (activeColorSlot) {
+                                            0 -> primaryHex = hex
+                                            1 -> secondaryHex = hex
+                                            2 -> backgroundHex = hex
+                                            else -> cardHex = hex
+                                        }
+                                    }
+                            )
+                        }
+                    }
+
+                    val activeHexValue = when (activeColorSlot) {
+                        0 -> primaryHex
+                        1 -> secondaryHex
+                        2 -> backgroundHex
+                        else -> cardHex
+                    }
+                    OutlinedTextField(
+                        value = activeHexValue,
+                        onValueChange = { updated ->
+                            when (activeColorSlot) {
+                                0 -> primaryHex = updated
+                                1 -> secondaryHex = updated
+                                2 -> backgroundHex = updated
+                                else -> cardHex = updated
+                            }
+                        },
+                        label = { Text("Hex Color (#RRGGBB)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(previewBg)
+                            .border(1.dp, previewSecondary, RoundedCornerShape(12.dp))
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(previewCard)
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = customName.ifBlank { "Preview" },
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colorScheme.onSurface
+                            )
+                        }
+                        
