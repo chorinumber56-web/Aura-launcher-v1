@@ -408,14 +408,12 @@ fun ThemesAndPerformanceScreen(
                                 Text("Reset")
                             }
                         }
-                        
                     }
                 }
 
                 val previewPrimary = parseHexColorOrNull(primaryHex) ?: NeonRed
                 val previewSecondary = parseHexColorOrNull(secondaryHex) ?: NeonPurple
-                val previewBg = parseHe
-                HexColorOrNull(backgroundHex) ?: ObsidianVoid
+                val previewBg = parseHexColorOrNull(backgroundHex) ?: ObsidianVoid
                 val previewCard = parseHexColorOrNull(cardHex) ?: ObsidianCard
 
                 Column(
@@ -573,4 +571,155 @@ fun ThemesAndPerformanceScreen(
                                 color = colorScheme.onSurface
                             )
                         }
-                        
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Brush.horizontalGradient(listOf(previewPrimary, previewSecondary)))
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "PLAY ▶",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            val theme = CustomAuraTheme(
+                                id = "custom_${System.currentTimeMillis()}",
+                                name = customName.trim().ifEmpty { "Custom Theme" },
+                                primaryHex = previewPrimary.toHexString(),
+                                secondaryHex = previewSecondary.toHexString(),
+                                backgroundHex = previewBg.toHexString(),
+                                cardHex = previewCard.toHexString(),
+                                customBackgroundPath = themePrefs.customBackgroundPath
+                            )
+                            onSaveCustomTheme(theme)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = accents.neonRed),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 48.dp)
+                            .testTag("save_custom_theme_button")
+                    ) {
+                        Icon(Icons.Rounded.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Save & Apply Custom Theme")
+                    }
+                }
+
+                if (themePrefs.customThemes.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(accents.glassPanelHeavy)
+                            .border(1.dp, accents.subtleBorder, RoundedCornerShape(18.dp))
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "SAVED CUSTOM THEMES (${themePrefs.customThemes.size})",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = accents.vibrantViolet
+                        )
+
+                        themePrefs.customThemes.forEach { saved ->
+                            val isSelected = themePrefs.selectedCustomThemeId == saved.id
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .defaultMinSize(minHeight = 56.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(if (isSelected) ObsidianElevated else accents.cardSurface)
+                                    .border(
+                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                        color = if (isSelected) saved.primaryColor else accents.subtleBorder,
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                    .clickable { onSelectCustomTheme(saved) }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .testTag("saved_custom_theme_${saved.id}"),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                Brush.linearGradient(
+                                                    listOf(saved.primaryColor, saved.secondaryColor)
+                                                )
+                                            )
+                                    )
+                                    Column {
+                                        Text(
+                                            text = saved.name,
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "${saved.primaryHex} • ${saved.secondaryHex}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.CheckCircle,
+                                            contentDescription = "Active",
+                                            tint = accents.neonRed,
+                                            modifier = Modifier.padding(end = 6.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { onDeleteCustomTheme(saved.id) },
+                                        modifier = Modifier.size(44.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.DeleteOutline,
+                                            contentDescription = "Delete custom theme",
+                                            tint = accents.neonRed
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412, heightDp = 892)
+@Composable
+private fun ThemesAndPerformanceScreenPreview() {
+    AuraLauncherTheme {
+        ThemesAndPerformanceScreen(
+            themePrefs = SavedThemePreferences(),
+            onBack = {},
+            onToggleLowEndMode = {},
+            onApplyLiteQuickPreset = {},
+            onSelectPreset = {},
+            onSelectCustomTheme = {},
+            onSaveCustomTheme = {},
+            onDeleteCustomTheme = {},
+            onPickCustomBackground = {},
+            onResetCustomBackground = {}
+        )
+    }
+}
