@@ -25,7 +25,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AuraLauncher"
-include(":AuraLauncher")
+include(":ZalithLauncher")
 include(":LWJGL")
 include(":LWJGL:patches")
 project(":LWJGL:patches").projectDir = file("LWJGL/patches")
